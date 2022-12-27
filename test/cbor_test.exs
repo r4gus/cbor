@@ -3,28 +3,46 @@ defmodule CborTest do
   doctest Cbor
 
   test "decode integer smaller 24" do
-    assert Cbor.decode(<<0>>) == {:ok, 0}
-    assert Cbor.decode(<<1>>) == {:ok, 1}
-    assert Cbor.decode(<<0xa>>) == {:ok, 10}
-    assert Cbor.decode(<<0x17>>) == {:ok, 23}
+    assert Cbor.decode(<<0>>) == {:ok, 0, <<>>}
+    assert Cbor.decode(<<1>>) == {:ok, 1, <<>>}
+    assert Cbor.decode(<<0xa>>) == {:ok, 10, <<>>}
+    assert Cbor.decode(<<0x17>>) == {:ok, 23, <<>>}
+    assert Cbor.decode(<<0x20>>) == {:ok, -1, <<>>}
+    assert Cbor.decode(<<0x29>>) == {:ok, -10, <<>>}
   end
 
   test "decode integer that fits in one byte" do
-    assert Cbor.decode(<<0x18, 0x18>>) == {:ok, 24}
-    assert Cbor.decode(<<0x18, 0x19>>) == {:ok, 25}
-    assert Cbor.decode(<<0x18, 0x64>>) == {:ok, 100}
+    assert Cbor.decode(<<0x18, 0x18>>) == {:ok, 24, <<>>}
+    assert Cbor.decode(<<0x18, 0x19>>) == {:ok, 25, <<>>}
+    assert Cbor.decode(<<0x18, 0x64>>) == {:ok, 100, <<>>}
+    assert Cbor.decode(<<0x38, 0x63>>) == {:ok, -100, <<>>}
   end
 
   test "decode integer that fits in two bytes" do
-    assert Cbor.decode(<<0x19, 0x03, 0xe8>>) == {:ok, 1000}
+    assert Cbor.decode(<<0x19, 0x03, 0xe8>>) == {:ok, 1000, <<>>}
+    assert Cbor.decode(<<0x39, 0x03, 0xe7>>) == {:ok, -1000, <<>>}
   end
 
   test "decode integer that fits in four bytes" do
-    assert Cbor.decode(<<0x1a, 0x00, 0x0f, 0x42, 0x40>>) == {:ok, 1000000}
+    assert Cbor.decode(<<0x1a, 0x00, 0x0f, 0x42, 0x40>>) == {:ok, 1000000, <<>>}
   end
 
   test "decode integer that fits in eight bytes" do
-    assert Cbor.decode(<<0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00>>) == {:ok, 1000000000000}
-    assert Cbor.decode(<<0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff>>) == {:ok, 18446744073709551615}
+    assert Cbor.decode(<<0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00>>) == {:ok, 1000000000000, <<>>}
+    assert Cbor.decode(<<0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff>>) == {:ok, 18446744073709551615, <<>>}
+    assert Cbor.decode(<<0x3b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff>>) == {:ok, -18446744073709551616, <<>>}
+  end
+
+  test "decode byte string" do
+    assert Cbor.decode(<<0x40>>) == {:ok, <<>>, <<>>}
+    assert Cbor.decode(<<0x44, 0x01, 0x02, 0x03, 0x04>>) == {:ok, <<0x01, 0x02, 0x03, 0x04>>, <<>>}
+  end
+
+  test "decode text string" do
+    assert Cbor.decode(<<0x61, 0x61>>) == {:ok, "a", <<>>}
+    assert Cbor.decode(<<0x64, 0x49, 0x45, 0x54, 0x46>>) == {:ok, "IETF", <<>>}
+    assert Cbor.decode(<<0x62, 0x22, 0x5c>>) == {:ok, "\"\\", <<>>}
+    assert Cbor.decode(<<0x62, 0xc3, 0xbc>>) == {:ok, "\u00fc", <<>>}
+    assert Cbor.decode(<<0x63, 0xe6, 0xb0, 0xb4>>) == {:ok, "\u6c34", <<>>}
   end
 end
