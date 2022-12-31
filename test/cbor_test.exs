@@ -61,5 +61,7 @@ defmodule CborTest do
     assert Cbor.decode(<<0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03>>) == {:ok, %{"a" => 1, "b" => [2, 3]}, <<>>}
     assert Cbor.decode(<<0x82, 0x61, 0x61, 0xa1, 0x61, 0x62, 0x61, 0x63>>) == {:ok, ["a", %{"b" => "c"}], <<>>}
     assert Cbor.decode("\xa5\x61\x61\x61\x41\x61\x62\x61\x42\x61\x63\x61\x43\x61\x64\x61\x44\x61\x65\x61\x45") == {:ok, %{"a" => "A", "b" => "B", "c" => "C", "d" => "D", "e" => "E"}, <<>>}
+    assert Cbor.decode("\xc0\x74\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30\x5a") == {:ok, {0, "2013-03-21T20:04:00Z"}, <<>>}
+    assert Cbor.decode("\xd8\x20\x76\x68\x74\x74\x70\x3a\x2f\x2f\x77\x77\x77\x2e\x65\x78\x61\x6d\x70\x6c\x65\x2e\x63\x6f\x6d") == {:ok, {32, "http://www.example.com"}, <<>>}
   end
 end

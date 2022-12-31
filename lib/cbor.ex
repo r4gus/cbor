@@ -13,6 +13,7 @@ defmodule Cbor do
       {3, value, rest} -> decode(:str, rest, value)
       {4, value, rest} -> decode(:arr, rest, value)
       {5, value, rest} -> decode(:map, rest, value)
+      {6, value, rest} -> decode(:tag, rest, value)
     end
   end
 
@@ -43,6 +44,13 @@ defmodule Cbor do
          end
          {:error, error} -> {:error, error}
       end
+      {:error, error} -> {:error, error}
+    end
+  end
+
+  defp decode(:tag, <<data::binary>>, tag) do
+    case decode(data) do
+      {:ok, content, rest} -> {:ok, {tag, content}, rest}
       {:error, error} -> {:error, error}
     end
   end
