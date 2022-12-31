@@ -64,4 +64,35 @@ defmodule CborTest do
     assert Cbor.decode("\xc0\x74\x32\x30\x31\x33\x2d\x30\x33\x2d\x32\x31\x54\x32\x30\x3a\x30\x34\x3a\x30\x30\x5a") == {:ok, {0, "2013-03-21T20:04:00Z"}, <<>>}
     assert Cbor.decode("\xd8\x20\x76\x68\x74\x74\x70\x3a\x2f\x2f\x77\x77\x77\x2e\x65\x78\x61\x6d\x70\x6c\x65\x2e\x63\x6f\x6d") == {:ok, {32, "http://www.example.com"}, <<>>}
   end
+
+  test "decode simple" do
+    assert Cbor.decode(<<0xf4>>) == {:ok, false, <<>>}
+    assert Cbor.decode(<<0xf5>>) == {:ok, true, <<>>}
+    assert Cbor.decode(<<0xf6>>) == {:ok, :null, <<>>}
+    assert Cbor.decode(<<0xf7>>) == {:ok, :undefined, <<>>}
+  end
+
+  test "decode half precision float" do
+    {_, f1, _} = Cbor.decode(<<0xf9, 0x00, 0x00>>)
+    assert_in_delta f1, 0.0, 0.0000001
+
+    {_, f2, _} = Cbor.decode(<<0xf9, 0x3c, 0x00>>)
+    assert_in_delta f2, 1.0, 0.0000001
+
+    {_, f3, _} = Cbor.decode(<<0xf9, 0x3e, 0x00>>)
+    assert_in_delta f3, 1.5, 0.0000001
+
+    {_, f4, _} = Cbor.decode(<<0xf9, 0x7b, 0xff>>)
+    assert_in_delta f4, 65504.0, 0.0000001
+  end
+
+  test "decode single precision float" do
+    {_, f1, _} = Cbor.decode(<<0xfa, 0x47, 0xc3, 0x50, 0x00>>)
+    assert_in_delta f1, 100000.0, 0.0000001
+  end
+
+  test "decode double precision float" do
+    {_, f1, _} = Cbor.decode(<<0xfb, 0x3f, 0xf1, 0x99, 0x99, 0x99, 0x99, 0x99, 0x9a>>)
+    assert_in_delta f1, 1.1, 0.0000001
+  end
 end
