@@ -87,6 +87,9 @@ defmodule Cbor do
   defp head(<<>>), do: {:error, "unexpected end of input"}
 
   defp decode_half(<<half::float-size(16)>>), do: half
+  defp decode_half(<<_::1, exp::5, mant::10, _::binary>>) when exp == 31, do: if mant == 0, do: :infinity, else: :nan
   defp decode_single(<<single::float-size(32)>>), do: single
+  defp decode_single(<<_::1, exp::8, mant::23, _::binary>>) when exp == 255, do: if mant == 0, do: :infinity, else: :nan
   defp decode_double(<<double::float-size(64)>>), do: double
+  defp decode_double(<<_::1, exp::11, mant::52, _::binary>>) when exp == 2047, do: if mant == 0, do: :infinity, else: :nan
 end
