@@ -107,4 +107,35 @@ defmodule CborTest do
     assert Cbor.decode(<<0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00>>) == {:ok, :nan, <<>>}
     assert Cbor.decode(<<0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00>>) == {:ok, :infinity, <<>>}
   end
+
+  test "encode integer smaller 24" do
+    assert Cbor.encode(0) == <<0>>
+    assert Cbor.encode(1) == <<1>>
+    assert Cbor.encode(10) == <<0xa>>
+    assert Cbor.encode(23) == <<0x17>>
+    assert Cbor.encode(-1) == <<0x20>>
+    assert Cbor.encode(-10) == <<0x29>>
+  end
+
+  test "encode integer that fits in one byte" do
+    assert Cbor.encode(24) == <<0x18, 0x18>>
+    assert Cbor.encode(25) == <<0x18, 0x19>>
+    assert Cbor.encode(100) == <<0x18, 0x64>>
+    assert Cbor.encode(-100) == <<0x38, 0x63>>
+  end
+
+  test "encode integer that fits in two bytes" do
+    assert Cbor.encode(1000) == <<0x19, 0x03, 0xe8>>
+    assert Cbor.encode(-1000) == <<0x39, 0x03, 0xe7>>
+  end
+
+  test "encode integer that fits in four bytes" do
+    assert Cbor.encode(1000000) == <<0x1a, 0x00, 0x0f, 0x42, 0x40>>
+  end
+
+  test "encode integer that fits in eight bytes" do
+    assert Cbor.encode(1000000000000) == <<0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00>>
+    assert Cbor.encode(18446744073709551615) == <<0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff>>
+    assert Cbor.encode(-18446744073709551616) == <<0x3b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff>>
+  end
 end

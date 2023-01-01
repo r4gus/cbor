@@ -23,6 +23,20 @@ defmodule Cbor do
     end
   end
 
+  def encode(data) when is_integer(data) and data >= 0 do
+    case data do
+      x when x in 0..23 -> <<x::8>>
+      x when x in 24..255 -> <<24::8, x::8>>
+      x when x in 256..65535 -> <<25::8, x::16>>
+      x when x in 65535..4294967295 -> <<26::8, x::32>>
+      x when x in 4294967296..18446744073709551615 -> <<27::8, x::64>>
+    end
+  end
+  def encode(data) when is_integer(data) and data < 0 do
+    <<_::3, info::5, data::binary>> = encode(-(data + 1))
+    <<1::3, info::5, data::binary>>
+  end
+
   defp decode(@bytestr, <<data::binary>>, length), do: decode(3, data, length)
   defp decode(@textstr, <<data::binary>>, length) when byte_size(data) >= length do
     {lhs, rhs} = String.split_at(data, length)
