@@ -36,6 +36,14 @@ defmodule Cbor do
     <<_::3, info::5, data::binary>> = encode(-(data + 1))
     <<1::3, info::5, data::binary>>
   end
+  def encode(<<data::binary>>, format \\ :byte_string) do
+    <<_::3, info::5, len::binary>> = encode(byte_size(data))
+    case format do
+      :byte_string -> <<@bytestr::3, info::5, len::binary, data::binary>>
+      :text_string -> <<@textstr::3, info::5, len::binary, data::binary>>
+      _ -> :error
+    end
+  end
 
   defp decode(@bytestr, <<data::binary>>, length), do: decode(3, data, length)
   defp decode(@textstr, <<data::binary>>, length) when byte_size(data) >= length do
